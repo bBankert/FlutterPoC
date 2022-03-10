@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/Repositories/SharedPreferencesRepository.dart';
+import 'package:untitled/Services/BiometricService.dart';
 import 'package:untitled/Services/LoginService.dart';
 import 'package:untitled/Views/AuthenticatedPage.dart';
 import 'package:untitled/Views/BiometricPrompt.dart';
@@ -29,6 +30,21 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
   final double _iconOffset = 38.0;
   final _sharedPreferenceRepository = GetIt.instance<SharedPreferencesRepository>();
+  bool _biometricEnabled = false;
+  bool _enrolledInBiometrics = false;
+
+  @override
+  void initState(){
+    super.initState();
+    initAsyncValues().then((complete){
+      print("Updated biometrics enrollment to ${_enrolledInBiometrics}");
+    });
+  }
+
+  Future<bool> initAsyncValues() async{
+    _enrolledInBiometrics = await _sharedPreferenceRepository.getValue("BiometricsEnabled", ValueType.Boolean);
+    return true;
+  }
 
   @override
   void dispose(){
@@ -37,31 +53,28 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
   }
 
-  _decodeUserInformation(String encodedUser){
-    Map<String,dynamic> map = jsonDecode(encodedUser);
-    return UserInformation.fromJson(map);
+
+  setBiometricEnabled(enabled){
+    _biometricEnabled = enabled;
   }
 
-  authenticatedCallback(authenticated) async{
+  login(authenticated) async{
     if(authenticated){
-      //TODO Move this outside of here and inject earlier if possible
-      UserInformation testUser = UserInformation(firstName: "John",
-          lastName: "Test",
-          dateOfBirth: DateTime.parse("1990-01-01"));
-
-      _sharedPreferenceRepository
-          .setValue('UserInformation',
-          jsonEncode(testUser),
-          ValueType.String);
-
+      if(_biometricEnabled){
+        bool biometricsEnabled = await GetIt.instance<BiometricsService>().authenticate();
+        if(biometricsEnabled){
+          print("Enrolled in biometric auth");
+        }
+      }
       String encodedUser = await _sharedPreferenceRepository.getValue("UserInformation", ValueType.String);
-      UserInformation user = _decodeUserInformation(encodedUser);
-      GetIt.instance<NavigationService>()
-          .navigateTo(
-          '/authenticated',
-          user);
+      if(encodedUser != null && encodedUser.isNotEmpty){
+        UserInformation user = UserInformation.decodeUserInformation(encodedUser);
+        GetIt.instance<NavigationService>()
+            .navigateTo(
+            '/authenticated',
+            user);
+      }
     }
-
   }
 
   @override
@@ -120,7 +133,7 @@ class _LoginFormState extends State<LoginForm> {
                                     GetIt.instance<LoginService>().Login(_usernameController.text,_passwordController.text)
                                         .then((response) {
                                       widget.loadingCallback();
-                                      authenticatedCallback(true);
+                                      login(response);
                                     })
                                   }
                                   );
@@ -131,7 +144,9 @@ class _LoginFormState extends State<LoginForm> {
                           )
                           ),
                         ),
-                      BiometricPrompt(biometricAuthenticatedCallback: authenticatedCallback)
+                      _enrolledInBiometrics ?
+                      Container() :
+                      BiometricPrompt(biometricAuthenticatedCallback: setBiometricEnabled)
                     ],
                   ),
                 )

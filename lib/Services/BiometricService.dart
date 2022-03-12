@@ -26,7 +26,7 @@ class BiometricsService {
           )
       );
       //set biometrics enabled
-      GetIt.instance<SharedPreferencesRepository>().setValue("BiometricsEnabled", true, ValueType.Boolean);
+      SharedPreferencesRepository.localStorage.setBooleanValue("BiometricsEnabled", true);
       return authenticationResult;
     }
     return false;

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/Repositories/SharedPreferencesRepository.dart';
 import 'package:untitled/Services/BiometricService.dart';
 import 'package:untitled/Services/NavigationService.dart';
@@ -20,13 +21,24 @@ void serviceLocator(){
   GetIt.instance.registerLazySingleton(() => NavigationService());
   GetIt.instance.registerLazySingleton(() => LoginService());
   GetIt.instance.registerLazySingleton(() => BiometricsService());
-  GetIt.instance.registerLazySingleton(() => SharedPreferencesRepository());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+
+}
+
+class _MyAppState extends State<MyApp>{
+
+  @override
+  void initState(){
+    super.initState();
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -51,4 +63,5 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+
 }

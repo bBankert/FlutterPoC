@@ -15,7 +15,7 @@ class LoginInterceptor extends Interceptor {
          dateOfBirth: DateTime.parse(('1990-01-01')
          )
      );
-     GetIt.instance<SharedPreferencesRepository>().setValue("UserInformation",jsonEncode(testUser) , ValueType.String);
+     SharedPreferencesRepository.localStorage.setStringValue("UserInformation",jsonEncode(testUser));
       return handler.resolve(
           Response(
               requestOptions:options,

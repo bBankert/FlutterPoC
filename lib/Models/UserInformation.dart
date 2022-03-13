@@ -25,7 +25,7 @@ class UserInformation {
     'dateOfBirth': dateOfBirth.toIso8601String() //DateTimes don't translate well...
   };
 
-  factory UserInformation.decodeUserInformation(String encodedUser){
+  factory UserInformation.decodeInformation(String encodedUser){
     Map<String,dynamic> map = jsonDecode(encodedUser);
     return UserInformation.fromJson(map);
   }

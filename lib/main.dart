@@ -17,6 +17,8 @@ void main() {
   runApp(const MyApp());
 }
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 void serviceLocator(){
   GetIt.instance.registerLazySingleton(() => NavigationService());
   GetIt.instance.registerLazySingleton(() => LoginService());
@@ -33,6 +35,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp>{
 
+
   @override
   void initState(){
     super.initState();
@@ -45,6 +48,7 @@ class _MyAppState extends State<MyApp>{
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       navigatorKey: GetIt.instance<NavigationService>().navigatorKey,
+      navigatorObservers: [routeObserver],
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -57,8 +61,8 @@ class _MyAppState extends State<MyApp>{
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: LoginBase(initialContext: context),
       routes: <String,WidgetBuilder>{
+        '/': (context) => const LoginBase(),
         '/authenticated': (context) => const AuthenticatedPage()
       },
     );

@@ -121,7 +121,7 @@ class _LoginFormState extends State<LoginForm> {
                               onPressed: () {
                                 if(_formKey.currentState!.validate()){
                                   widget.loadingCallback();
-                                  Future.delayed(Duration(seconds: 3),() => {
+                                  Future.delayed(const Duration(seconds: 3),() => {
                                     GetIt.instance<LoginService>().Login(_usernameController.text,_passwordController.text)
                                         .then((response) {
                                       widget.loadingCallback();
@@ -137,7 +137,7 @@ class _LoginFormState extends State<LoginForm> {
                           ),
                         ),
                       widget.enrolledInBiometrics ?
-                      Text("Already enabled biometrics") :
+                      const Text("Already enabled biometrics") :
                       BiometricPrompt(biometricAuthenticatedCallback: setBiometricEnabled)
                     ],
                   ),

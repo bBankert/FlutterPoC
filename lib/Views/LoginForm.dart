@@ -1,23 +1,20 @@
 
 
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/Repositories/SharedPreferencesRepository.dart';
+import 'package:untitled/Services/BiometricService.dart';
 import 'package:untitled/Services/LoginService.dart';
-import 'package:untitled/Views/AuthenticatedPage.dart';
 import 'package:untitled/Views/BiometricPrompt.dart';
-import 'package:untitled/Views/LoadingModal.dart';
 
 import '../Models/UserInformation.dart';
 import '../Services/NavigationService.dart';
 
 class LoginForm extends StatefulWidget {
-  LoginForm({Key? key,required this.loadingCallback}) : super(key: key);
+  LoginForm({Key? key,required this.enrolledInBiometrics,required this.loadingCallback}) : super(key: key);
   Function loadingCallback;
+  bool enrolledInBiometrics;
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -28,7 +25,13 @@ class _LoginFormState extends State<LoginForm> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final double _iconOffset = 38.0;
-  final _sharedPreferenceRepository = GetIt.instance<SharedPreferencesRepository>();
+  bool _biometricEnabled = false;
+
+  @override
+  void initState(){
+    super.initState();
+
+  }
 
   @override
   void dispose(){
@@ -37,31 +40,33 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
   }
 
-  _decodeUserInformation(String encodedUser){
-    Map<String,dynamic> map = jsonDecode(encodedUser);
-    return UserInformation.fromJson(map);
+
+
+  setBiometricEnabled(enabled){
+    _biometricEnabled = enabled;
   }
 
-  authenticatedCallback(authenticated) async{
+  login(authenticated) async{
     if(authenticated){
-      //TODO Move this outside of here and inject earlier if possible
-      UserInformation testUser = UserInformation(firstName: "John",
-          lastName: "Test",
-          dateOfBirth: DateTime.parse("1990-01-01"));
+      if(_biometricEnabled){
+        bool biometricsEnabled = await GetIt.instance<BiometricsService>().authenticate();
+        if(biometricsEnabled){
+          print("Enrolled in biometric auth");
+        }
+      }
 
-      _sharedPreferenceRepository
-          .setValue('UserInformation',
-          jsonEncode(testUser),
-          ValueType.String);
+      SharedPreferencesRepository.localStorage.getStringValue("UserInformation")
+      .then((String encodedUser){
+          if(encodedUser.isNotEmpty){
+            UserInformation user = UserInformation.decodeUserInformation(encodedUser);
+            GetIt.instance<NavigationService>()
+                .navigateTo(
+                '/authenticated',
+                user);
+          }
+        });
 
-      String encodedUser = await _sharedPreferenceRepository.getValue("UserInformation", ValueType.String);
-      UserInformation user = _decodeUserInformation(encodedUser);
-      GetIt.instance<NavigationService>()
-          .navigateTo(
-          '/authenticated',
-          user);
     }
-
   }
 
   @override
@@ -116,11 +121,11 @@ class _LoginFormState extends State<LoginForm> {
                               onPressed: () {
                                 if(_formKey.currentState!.validate()){
                                   widget.loadingCallback();
-                                  Future.delayed(Duration(seconds: 3),() => {
+                                  Future.delayed(const Duration(seconds: 3),() => {
                                     GetIt.instance<LoginService>().Login(_usernameController.text,_passwordController.text)
                                         .then((response) {
                                       widget.loadingCallback();
-                                      authenticatedCallback(true);
+                                      login(response);
                                     })
                                   }
                                   );
@@ -131,7 +136,9 @@ class _LoginFormState extends State<LoginForm> {
                           )
                           ),
                         ),
-                      BiometricPrompt(biometricAuthenticatedCallback: authenticatedCallback)
+                      widget.enrolledInBiometrics ?
+                      const Text("Already enabled biometrics") :
+                      BiometricPrompt(biometricAuthenticatedCallback: setBiometricEnabled)
                     ],
                   ),
                 )
@@ -139,4 +146,5 @@ class _LoginFormState extends State<LoginForm> {
       ),
     );
   }
+
 }

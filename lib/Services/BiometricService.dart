@@ -1,5 +1,7 @@
+import 'package:get_it/get_it.dart';
 import 'package:local_auth/auth_strings.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:untitled/Repositories/SharedPreferencesRepository.dart';
 
 class BiometricsService {
   final _localAuth = LocalAuthentication();
@@ -23,6 +25,8 @@ class BiometricsService {
               goToSettingsDescription: 'Register biometrics'
           )
       );
+      //set biometrics enabled
+      SharedPreferencesRepository.localStorage.setBooleanValue("BiometricsEnabled", true);
       return authenticationResult;
     }
     return false;

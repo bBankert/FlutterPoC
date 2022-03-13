@@ -7,23 +7,23 @@ import 'package:untitled/Models/UserInformation.dart';
 import '../Interceptors/LoginInterceptor.dart';
 
 class LoginService {
-    Future<UserInformation?> Login(String username,String password) async {
-      dynamic userInformation;
+    final _client = Dio();
+    Future<bool> Login(String username,String password) async {
       try{
-        Dio client = Dio();
-        client.interceptors.add(LoginInterceptor());
-        final response = await client.request(
+
+        _client.interceptors.add(LoginInterceptor());
+        final response = await _client.request(
           "http://test.com/login",
           data: jsonEncode(LoginInformation(username: username, password: password)),
           options: Options(method: 'POST')
         );
         if(response.statusCode == 200){
-          userInformation = response.data;
+          return true;
         }
       }
       catch(e){
         print(e);
       }
-      return userInformation;
+      return false;
     }
 }

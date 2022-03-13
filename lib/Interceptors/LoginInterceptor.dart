@@ -1,21 +1,26 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
 import 'package:untitled/Models/UserInformation.dart';
+import 'package:untitled/Repositories/SharedPreferencesRepository.dart';
 
 class LoginInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+
+     UserInformation testUser = UserInformation(
+         firstName: 'tom',
+         lastName: 'test',
+         dateOfBirth: DateTime.parse(('1990-01-01')
+         )
+     );
+     SharedPreferencesRepository.localStorage.setStringValue("UserInformation",jsonEncode(testUser));
       return handler.resolve(
           Response(
               requestOptions:options,
               statusCode: 200,
-              data:UserInformation(
-                  firstName: 'tom',
-                  lastName: 'test',
-                  dateOfBirth: DateTime.parse(('1990-01-01')
-                  )
-              )
+              data: testUser
           )
       );
   }

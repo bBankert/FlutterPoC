@@ -1,8 +1,11 @@
 
 
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:untitled/Models/LoginInformation.dart';
 import 'package:untitled/Repositories/SharedPreferencesRepository.dart';
 import 'package:untitled/Services/BiometricService.dart';
 import 'package:untitled/Services/LoginService.dart';
@@ -26,6 +29,8 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
   final double _iconOffset = 38.0;
   bool _biometricEnabled = false;
+  final LoginService _loginService = GetIt.instance<LoginService>();
+  final NavigationService _navigationService = GetIt.instance<NavigationService>();
 
   @override
   void initState(){
@@ -51,15 +56,25 @@ class _LoginFormState extends State<LoginForm> {
       if(_biometricEnabled){
         bool biometricsEnabled = await GetIt.instance<BiometricsService>().authenticate();
         if(biometricsEnabled){
-          print("Enrolled in biometric auth");
+          //print("Enrolled in biometric auth");
+          SharedPreferencesRepository.localStorage.setStringValue(
+              "LoginInformation",
+              jsonEncode(
+                  LoginInformation(
+                      username: _usernameController.text,
+                      password: _passwordController.text
+                  )
+              )
+          );
+
         }
       }
 
       SharedPreferencesRepository.localStorage.getStringValue("UserInformation")
       .then((String encodedUser){
           if(encodedUser.isNotEmpty){
-            UserInformation user = UserInformation.decodeUserInformation(encodedUser);
-            GetIt.instance<NavigationService>()
+            UserInformation user = UserInformation.decodeInformation(encodedUser);
+            _navigationService
                 .navigateTo(
                 '/authenticated',
                 user);
@@ -122,7 +137,7 @@ class _LoginFormState extends State<LoginForm> {
                                 if(_formKey.currentState!.validate()){
                                   widget.loadingCallback();
                                   Future.delayed(const Duration(seconds: 3),() => {
-                                    GetIt.instance<LoginService>().Login(_usernameController.text,_passwordController.text)
+                                    _loginService.Login(_usernameController.text,_passwordController.text)
                                         .then((response) {
                                       widget.loadingCallback();
                                       login(response);

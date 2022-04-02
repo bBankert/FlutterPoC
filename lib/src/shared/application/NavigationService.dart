@@ -11,4 +11,8 @@ class NavigationService {
   Future<dynamic> navigateHome(){
     return navigatorKey.currentState!.pushNamedAndRemoveUntil("/", (route) => false);
   }
+
+  Future<dynamic> rerouteTo(Route route,bool Function(Route) predicate){
+    return navigatorKey.currentState!.pushAndRemoveUntil(route, predicate);
+  }
 }
